@@ -1,7 +1,7 @@
 {
-  "name": "singelong",
-  "displayName": "SingeLong",
-  "description": "VSCode extension to singelong (read: sing along) played music connected with your spotify",
+  "name": "vs-lyrics",
+  "displayName": "vs-lyrics",
+  "description": "This extension will show lyrics of the song that is currently playing on Spotify.",
   "version": "1.0.0",
   "engines": {
     "vscode": "^1.78.1"
@@ -14,42 +14,33 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/qolbudr/singelong"
+    "url": "https://github.com/NullSeile/vs-lyrics"
   },
   "icon": "assets/images/icon.png",
   "__metadata": {
-    "publisherDisplayName": "Qolbu Dzikru"
+    "publisherDisplayName": "Lia Bertran"
   },
-  "publisher": "qolbudr",
+  "publisher": "nullptr",
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "singelong-activitybar",
-          "title": "SingeLong",
-          "icon": "assets/images/icon-logo.svg"
-        }
-      ]
-    },
     "views": {
-      "singelong-activitybar": [
+      "explorer": [
         {
           "type": "webview",
-          "id": "singelong.openview",
-          "name": "SingeLong"
+          "id": "vs-lyrics.openview",
+          "name": "VS Lyrics"
         }
       ]
     },
     "commands": [
       {
-        "command": "singelong.authorize",
+        "command": "vs-lyrics.authorize",
         "title": "Authorize",
-        "category": "SingeLong"
+        "category": "VS Lyrics"
       },
       {
-        "command": "singelong.logout",
+        "command": "vs-lyrics.logout",
         "title": "Logout",
-        "category": "SingeLong"
+        "category": "VS Lyrics"
       }
     ]
   },

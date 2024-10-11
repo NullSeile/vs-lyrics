@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import fs from 'node:fs';
 
 export class SingeLongViewProvider implements vscode.WebviewViewProvider {
-    public static readonly viewType = "singelong.openview";
+    public static readonly viewType = "vs-lyrics.openview";
     public view?: vscode.WebviewView;
     constructor(private readonly _extensionUri: vscode.Uri) { }
 

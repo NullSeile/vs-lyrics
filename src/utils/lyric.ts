@@ -3,19 +3,12 @@ import { Playing } from "../types/playing";
 import { Lyric } from "../types/lyric";
 
 const msxmatchToken = '2005218b74f939209bda92cb633c7380612e14cb7fe92dcd6a780f';
-const msxmatchUrl = 'https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_synched&subtitle_format=lrc&app_id=web-desktop-app-v1.0'
+const msxmatchUrl = 'https://apic-desktop.musixmatch.com/ws/1.1/macro.subtitles.get?format=json&namespace=lyrics_synched&subtitle_format=lrc&app_id=web-desktop-app-v1.0';
 
 export const getLyric = async (playing: Playing): Promise<Lyric> => {
     try {
-        // Fetch Netease
-        const chinese = await fetchNetease(playing);
-        if (!chinese.exception) {
-            console.log("LYRICS FROM NETEASE");
-            return chinese;
-        }
-
         // Fetch MusixMatch
-        const msxmatchParam = `&q_artist=${playing.artistName}&q_track=${playing.songTitle}&usertoken=${msxmatchToken}`
+        const msxmatchParam = `&q_artist=${playing.artistName}&q_track=${playing.songTitle}&usertoken=${msxmatchToken}`;
         const finalUrl = msxmatchUrl + msxmatchParam;
         const response = await axios.get(finalUrl, {
             headers: {
@@ -25,29 +18,36 @@ export const getLyric = async (playing: Playing): Promise<Lyric> => {
         });
 
         const data = response.data;
-        const subtitleList = data.message.body.macro_calls['track.subtitles.get'].message.body.subtitle_list
-        if (subtitleList.length > 0) {
+        console.log("musuxmatch output", data);
+        const subtitleList: (any[] | null) = data.message.body.macro_calls['track.subtitles.get'].message.body?.subtitle_list;
+        if (subtitleList && subtitleList.length > 0) {
             if (subtitleList[0].subtitle.subtitle_body) {
-                console.log("LYRICS FROM MUSIXMATCH");
-                return { id: playing.id, lyric: subtitleList[0].subtitle.subtitle_body }
+                console.log("LYRICS FROM MUSIXMATCH", data);
+                return { id: playing.id, lyric: subtitleList[0].subtitle.subtitle_body };
             }
         }
 
-
-        // Fetch Own API
-        const own = await axios.get(`https://lyrics-api.qolbudr.workers.dev/?artist=${playing.artistName}&name=${playing.songTitle}`)
-        const ownData = own.data;
-        if (ownData != "Not found") {
-            console.log("LYRICS FROM OWN API");
-            return { id: playing.id, lyric: ownData }
+        // Fetch Netease
+        const chinese = await fetchNetease(playing);
+        if (!chinese.exception) {
+            console.log("LYRICS FROM NETEASE", chinese);
+            return chinese;
         }
 
+        // Fetch Own API
+        const own = await axios.get(`https://lyrics-api.qolbudr.workers.dev/?artist=${playing.artistName}&name=${playing.songTitle}`);
+        const ownData = own.data;
+        if (ownData !== "Not found") {
+            console.log("LYRICS FROM OWN API");
+            return { id: playing.id, lyric: ownData };
+        }
 
-        throw 'Cannot get lyric for playing song';
+        throw Error('Cannot get lyric for playing song');
     } catch (e) {
+        console.error(e);
         return { id: playing.id, exception: { code: 404, message: 'Cannot get lyric for playing song' } };
     }
-}
+};
 
 const fetchNetease = async (playing: Playing): Promise<Lyric> => {
     const searchURL = "https://music.xianqiao.wang/neteaseapiv2/search?limit=10&type=1&keywords=";
@@ -69,7 +69,9 @@ const fetchNetease = async (playing: Playing): Promise<Lyric> => {
 
     const album = LyricUtils.capitalize(playing.albumName!);
     const itemId = items.findIndex((val: any) => LyricUtils.capitalize(val.album.name) === album);
-    if (itemId === -1) return { id: playing.id, exception: { code: 404, message: "Cannot find track" } };
+    if (itemId === -1) {
+        return { id: playing.id, exception: { code: 404, message: "Cannot find track" } };
+    }
 
     const meta = await axios.get(lyricURL + items[itemId].id, { headers: requestHeader });
     let lyricStr = meta.data.lrc;
@@ -107,7 +109,9 @@ const fetchNetease = async (playing: Playing): Promise<Lyric> => {
                 text = matchResult.splice(textIndex, 1)[0];
                 text = LyricUtils.capitalize(LyricUtils.normalize(text, false));
             }
-            if (text === "纯音乐, 请欣赏") noLyrics = true;
+            if (text === "纯音乐, 请欣赏") {
+                noLyrics = true;
+            }
             return matchResult.map((slice) => {
                 const matchResult = slice.match(/[^\[\]]+/g);
                 const [key, value] = matchResult![0].split(":") || [];
@@ -140,7 +144,7 @@ const fetchNetease = async (playing: Playing): Promise<Lyric> => {
     }
 
     return { id: playing.id, lyric: lyrics.join("\n") };
-}
+};
 
 const LyricUtils = {
     normalize(s: string, emptySymbol = true) {

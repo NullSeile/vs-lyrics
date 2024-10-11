@@ -19,11 +19,11 @@ export function activate(context: vscode.ExtensionContext) {
 	extensionUri = context.extensionUri;
 
 	// define authorize command in vscode
-	let login = vscode.commands.registerCommand('singelong.authorize', () => authorize());
+	let login = vscode.commands.registerCommand('vs-lyrics.authorize', () => authorize());
 	context.subscriptions.push(login);
 
 	// define logout command in vscode
-	let logout = vscode.commands.registerCommand('singelong.logout', () => signOut());
+	let logout = vscode.commands.registerCommand('vs-lyrics.logout', () => signOut());
 	context.subscriptions.push(logout);
 
 	// creating panel
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	// listen updates
-	setInterval(listener, 1000)
+	setInterval(listener, 1000);
 }
 
 const authorize = async () => {
@@ -43,9 +43,9 @@ const authorize = async () => {
 	const app = express();
 
 	app.get("/callback", async (req: Request, res: Response) => {
-		const contentUri = vscode.Uri.joinPath(extensionUri, "assets", "close.html")
+		const contentUri = vscode.Uri.joinPath(extensionUri, "assets", "close.html");
 		const content = fs.readFileSync(contentUri.fsPath, 'utf-8');
-		const code = req.query.code
+		const code = req.query.code;
 
 		extensionContext.globalState.update("code", code);
 		await requestAccessToken();
@@ -58,7 +58,7 @@ const authorize = async () => {
 
 	// open url to retrive spotify authorization code
 	spotify.getAuthorizationCode();
-}
+};
 
 const signOut = async () => extensionContext.globalState.update("auth", null);
 
@@ -69,38 +69,46 @@ const requestAccessToken = async (): Promise<Auth> => {
 
 	const expiredIn = auth?.expiredIn || 0;
 	const refreshToken = auth?.refreshToken;
-	const isTokenExpired = (timestamp >= expiredIn) && refreshToken != null;
-	const isTokenExist = (auth?.accessToken != null);
+	const isTokenExpired = (timestamp >= expiredIn) && refreshToken != null; // eslint-disable-line
+	const isTokenExist = (auth?.accessToken != null); // eslint-disable-line
 
 	if (isTokenExpired) {
-		const data = await spotify.refreshToken(refreshToken)
-		if (data.exception) provider.view?.webview.postMessage({ 'command': 'error', 'message': data.exception.message });
+		if (!refreshToken) {
+			provider.view?.webview.postMessage({ 'command': 'error', 'message': 'refresh token is missing' });
+			return Promise.reject(`refresh token is missing for ${auth?.accessToken}`);
+		}
+
+		const data = await spotify.refreshToken(refreshToken);
+		if (data.exception) {
+			provider.view?.webview.postMessage({ 'command': 'error', 'message': data.exception.message });
+		}
 		extensionContext.globalState.update("auth", data);
 		return data;
 	}
 
-	if (!isTokenExist) {
+	if (!isTokenExist || !auth) {
 		const data = await spotify.getToken(code || '');
-		if (data.exception) provider.view?.webview.postMessage({ 'command': 'error', 'message': data.exception.message });
+		if (data.exception) {
+			provider.view?.webview.postMessage({ 'command': 'error', 'message': data.exception.message });
+		}
 		extensionContext.globalState.update("auth", data);
 		return data;
 	}
 
 	extensionContext.globalState.update("auth", auth);
 	return auth;
-}
+};
 
 const listener = async () => {
 	let auth = extensionContext.globalState.get<Auth>('auth');
-	const isTokenExist = (auth?.accessToken != null);
-
+	const isTokenExist = (auth?.accessToken != null); // eslint-disable-line
 	if (!isTokenExist) {
-		provider.view?.webview.postMessage({ 'command': 'error', 'message': 'spotify account is\'nt authorized yet' });
+		provider.view?.webview.postMessage({ 'command': 'error', 'message': 'spotify account isn\'t authorized yet' });
 		return;
 	}
 
 	if (isTokenExist) {
-		auth = await requestAccessToken()
+		auth = await requestAccessToken();
 		let lyricData;
 		let lyricCoolDown = extensionContext.globalState.get<number>('cooldown') || 0;
 		let lyricState = extensionContext.globalState.get<Lyric>('lyric');
@@ -112,7 +120,7 @@ const listener = async () => {
 			return provider.view?.webview.postMessage({ 'command': 'error', 'message': playing.exception.message });
 		}
 
-		const retrieveLyrics = (playingState?.id != playing.id && lyricState?.id != playing.id)
+		const retrieveLyrics = (playingState?.id !== playing.id && lyricState?.id !== playing.id);
 
 		if (retrieveLyrics && timestamp >= lyricCoolDown) {
 			extensionContext.globalState.update('cooldown', Date.now() + 5000);
@@ -137,8 +145,8 @@ const listener = async () => {
 				'lyrics': lyricData?.lyric || lyricState?.lyric,
 				'milliseconds': playing.currentProgress
 			}
-		})
+		});
 	}
-}
+};
 
 export function deactivate() { }
