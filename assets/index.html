@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <style>
 
@@ -23,11 +22,10 @@
 
         #lyrics-content {
             overflow-y: scroll;
-            height: 80vh;
+            height: 100vh;
             text-align: left;
             -ms-overflow-style: none;
             scrollbar-width: none;
-            padding: 0 1em 0 1em;
         }
 
         #lyrics-content::-webkit-scrollbar {
@@ -50,12 +48,12 @@
         h2 {
             margin: 0;
             font-size: 1em;
+            padding: 0 1em 2px 1em;
         }
     </style>
 </head>
 
 <body>
-    <div id="particles-js"></div>
     <div id="music-player">
         <div id="error">
             <h2 class="text-light" style="margin: 0px">Hmmmm</h2>
@@ -89,10 +87,9 @@
             }
         }
 
-        async function playLyrics(lyrics, milliseconds) {
+        async function setLyrics(lyrics) {
             let cleaned = []
             const array = lyrics.split("\n")
-
 
             array.forEach((items) => {
                 const found = items.match(/(\[[0-9])\w+/g)
@@ -107,15 +104,18 @@
             })
 
             document.getElementById('lyrics-content').innerHTML = contents;
+        }
 
+        function setTime(milliseconds) {
             let found = 0;
-            cleaned.forEach((items) => {
-                const targetMillisecond = extractAndConvertToMilliseconds(items)
+            const cleaned = document.getElementById('lyrics-content').children;
+            for (let i = 0; i < cleaned.length; i++) {
+                const targetMillisecond = parseInt(cleaned[i].id);
                 if (milliseconds >= targetMillisecond) {
-                    document.getElementById('' + targetMillisecond + '').className = 'text-sung';
+                    cleaned[i].className = 'text-sung';
                     found = targetMillisecond;
                 }
-            })
+            }
 
             const active = document.getElementById(found);
             if (active) {
@@ -124,7 +124,7 @@
                     active.textContent = "...";
                 }
 
-                document.getElementById('lyrics-content').scrollTo({ top: active.offsetTop - (document.getElementById('lyrics-content').clientHeight / 2) })
+                document.getElementById('lyrics-content').scrollTo({ top: active.offsetTop + (active.clientHeight / 2) - (document.getElementById('lyrics-content').clientHeight / 2) })
             } else {
                 document.getElementById('lyrics-content').scrollTo({ top: 0 });
             }
@@ -141,8 +141,12 @@
                 } else {
                     document.getElementById('lyrics').style.display = 'block';
                     document.getElementById('error').style.display = 'none';
-                    playLyrics(event.data.content.lyrics, event.data.content.milliseconds);
-                }
+                    if (event.data.command == 'setLyrics') {
+                        setLyrics(event.data.content.lyrics);
+                    } else if (event.data.command == 'setTime') {
+                        setTime(event.data.content.milliseconds);
+                    }
+                } 
             },
             false,
         );

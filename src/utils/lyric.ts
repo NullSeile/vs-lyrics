@@ -18,7 +18,7 @@ export const getLyric = async (playing: Playing): Promise<Lyric> => {
         });
 
         const data = response.data;
-        console.log("musuxmatch output", data);
+        // console.log("musuxmatch output", data);
         const subtitleList: (any[] | null) = data.message.body.macro_calls['track.subtitles.get'].message.body?.subtitle_list;
         if (subtitleList && subtitleList.length > 0) {
             if (subtitleList[0].subtitle.subtitle_body) {
@@ -44,7 +44,7 @@ export const getLyric = async (playing: Playing): Promise<Lyric> => {
 
         throw Error('Cannot get lyric for playing song');
     } catch (e) {
-        console.error(e);
+        console.warn(e);
         return { id: playing.id, exception: { code: 404, message: 'Cannot get lyric for playing song' } };
     }
 };
