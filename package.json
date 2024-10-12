@@ -2,7 +2,7 @@
   "name": "vs-lyrics",
   "displayName": "vs-lyrics",
   "description": "This extension will show lyrics of the song that is currently playing on Spotify.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "engines": {
     "vscode": "^1.78.1"
   },

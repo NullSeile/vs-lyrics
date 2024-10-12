@@ -38,7 +38,7 @@ export function activate(context: vscode.ExtensionContext) {
     const timeout = setTimeout(async () => {
         await listener();
         timeout.refresh();
-    }, 1000);
+    }, 2000);
 }
 
 const authorize = async () => {
@@ -119,14 +119,14 @@ const listener = async () => {
             provider.view?.webview.postMessage({
                 'command': 'setTime',
                 'content': {
-                    'milliseconds': playing.currentProgress
+                    'milliseconds': playing.currentProgress,
+                    'playing': playing.isPlaying
                 }
             });
         }
 
         if (prevPlaying?.id !== playing.id) {
             const lyricData = await lyric.getLyric(playing);
-            console.log('lyricData', lyricData);
 
             if (lyricData.exception) {
                 return provider.view?.webview.postMessage({ 'command': 'error', 'message': lyricData.exception.message });

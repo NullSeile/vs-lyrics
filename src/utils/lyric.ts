@@ -21,9 +21,10 @@ export const getLyric = async (playing: Playing): Promise<Lyric> => {
         // console.log("musuxmatch output", data);
         const subtitleList: (any[] | null) = data.message.body.macro_calls['track.subtitles.get'].message.body?.subtitle_list;
         if (subtitleList && subtitleList.length > 0) {
-            if (subtitleList[0].subtitle.subtitle_body) {
-                console.log("LYRICS FROM MUSIXMATCH", data);
-                return { id: playing.id, lyric: subtitleList[0].subtitle.subtitle_body };
+            const subtitle_body = subtitleList[0].subtitle.subtitle_body;
+            if (subtitle_body) {
+                console.log("LYRICS FROM MUSIXMATCH", { id: playing.id, lyric: subtitle_body });
+                return { id: playing.id, lyric: subtitle_body };
             }
         }
 

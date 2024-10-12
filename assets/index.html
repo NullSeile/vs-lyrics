@@ -106,7 +106,7 @@
             document.getElementById('lyrics-content').innerHTML = contents;
         }
 
-        function setTime(milliseconds) {
+        function updateView(milliseconds) {
             let found = 0;
             const cleaned = document.getElementById('lyrics-content').children;
             for (let i = 0; i < cleaned.length; i++) {
@@ -114,6 +114,9 @@
                 if (milliseconds >= targetMillisecond) {
                     cleaned[i].className = 'text-sung';
                     found = targetMillisecond;
+                } else {
+                    cleaned[i].className = 'text-future';
+                    // break; // Due to sync issues, lyrics can go back in time so we need to keep checking
                 }
             }
 
@@ -130,6 +133,20 @@
             }
         }
 
+        function setTime(milliseconds, playing) {
+            clearInterval(timer);
+            lastTime = Date.now();
+            updateView(milliseconds);
+            if (playing) {
+                timer = setInterval(() => {
+                    updateView(milliseconds + Date.now() - lastTime);
+                }, 100);
+            }
+        }
+
+        // Real time of the last time we updated the view
+        let lastTime = 0;
+        let timer;
 
         window.addEventListener(
             "message",
@@ -144,7 +161,7 @@
                     if (event.data.command == 'setLyrics') {
                         setLyrics(event.data.content.lyrics);
                     } else if (event.data.command == 'setTime') {
-                        setTime(event.data.content.milliseconds);
+                        setTime(event.data.content.milliseconds, event.data.content.playing);
                     }
                 } 
             },
